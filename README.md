@@ -1,36 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js App Router
 
-## Getting Started
+## Setup
 
-First, run the development server:
+- Next 16+ uses Turbopack by default. To opt-out, use the `--webpack` option on `dev` and `build` commands.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Inside the `app` directory
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Layout components** expose a shared UI (eg. header, nav, or footer) child component, `loading` for skeleton, or `error` for error boundaries.
+    - `app/layout.tsx` is the **root layout**, and must contain `<html>` and `<body>` tags. You get a runtime error if you don't.
+    - Don't add `<head>` tags to root layouts, export a `metadata` object instead.
+    - Fun fact: `next dev` allegedly checks whether `app/layout.tsx` is missing, and scaffolds it for you.
+    - `app/layout.tsx` wraps all routes. `app/blog/layout.tsx` wraps /blog and descendants.
+    - Advanced: `app/(shop)/cart/page.tsx` shares the layouts within (shop)
+- **Page components** expose a public routes and children of layouts. 
+    - `app/page.tsx` is the root page.
+    - `app/blog/_components/Post.tsx` is not routable, and is a safe place for UI utilities
+- **Route components** 
