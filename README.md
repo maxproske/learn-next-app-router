@@ -3,6 +3,7 @@
 ## Setup
 
 - Next 16+ uses Turbopack by default. To opt-out, use the `--webpack` option on `dev` and `build` commands.
+- Much streaming and boundaries
 
 ## Inside the `app` directory
 
@@ -27,7 +28,6 @@
 
 ## Server and Client Components
 
-
 Next.js uses the following render hierarchy:
 1. layout.js
 2. template.js, error.js, loading.js, not-found.js
@@ -46,8 +46,12 @@ Next.js uses the following render hierarchy:
 - **Client Components** run in the browser, and handle interactivity. Use these when you need `onClick`, `useEffect`, or the `window` object.
     - Simply add the `"use client"` directive to the top of a file to declare a boundary
     - All its imports and child components are considered part of the client bundle. That is, you don't need to add the directive to every child component
+    - Fun fact: the React `use` hook also turns a server compoennt into a client component
 - **Server Components** render on the server, and **never ship to the browser**. Useful for making API calls with API keys, and reducing the browser bundle
     - Server renders a **RSC payload**, a compact binary representation of the component tree, with **placeholders** for client components and any **props passed** to client components.
+    - If env variables are not prefixed with `NEXT_PUBLIC_`, they are replaced with an empty string.
+    - To prevent accidental usage, use `import 'server-only'`. The corresponding `client-only` npm package can be used too. Fun fact: the contents of these packages from npm are not used by Next.js.
+    - React context is NOT supported in server components
 - Next.js uses React's APIs to orchestrate rendering
 
 On page load:
@@ -57,3 +61,12 @@ On page load:
 4. Client uses JavaScript to hydrate client components and attach event handlers
 
 On navigation, navigation can be fully satisfied from the client cache.
+
+A lot of this shit when usign npm packages:
+```
+'use client'
+ 
+import { Carousel } from 'cool-carousel'
+ 
+export default Carousel
+```
