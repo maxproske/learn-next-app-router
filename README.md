@@ -3,58 +3,60 @@
 ## Setup
 
 - Next 16+ uses Turbopack by default. To opt-out, use the `--webpack` option on `dev` and `build` commands.
-- Much streaming and boundaries
+- Much **boundaries**, streaming, and serverless. 2 opposing modes: parts of a route can be in a functioning and non-functioning state. And in a loading or resolved state. And in a static or dynamic state. All without blocking the rest of the page. Imo there are more important things than caching.
 
 ## Inside the `app` directory
 
 - **Layout components** expose a shared UI (eg. header, nav, or footer) child component, `loading` for suspense boundary, or `error` for error boundary.
-    - `app/layout.tsx` is the **root layout**, and must contain `<html>` and `<body>` tags. You get a runtime error if you don't.
-    - Don't add `<head>` tags to root layouts, export a `metadata` object instead.
-    - Fun fact: `next dev` allegedly checks whether `app/layout.tsx` is missing, and scaffolds it for you.
-    - `app/layout.tsx` wraps all routes. `app/blog/layout.tsx` wraps /blog and descendants.
-    - Advanced: `app/(shop)/cart/page.tsx` shares the layouts within (shop)
-- **Page components** expose a public routes and children of layouts. 
-    - `app/page.tsx` is the root page.
-    - `app/blog/_components/Post.tsx` is not routable, and is a safe place for UI utilities
+  - `app/layout.tsx` is the **root layout**, and must contain `<html>` and `<body>` tags. You get a runtime error if you don't.
+  - Don't add `<head>` tags to root layouts, export a `metadata` object instead.
+  - Fun fact: `next dev` allegedly checks whether `app/layout.tsx` is missing, and scaffolds it for you.
+  - `app/layout.tsx` wraps all routes. `app/blog/layout.tsx` wraps /blog and descendants.
+  - Advanced: `app/(shop)/cart/page.tsx` shares the layouts within (shop)
+- **Page components** expose a public routes and children of layouts.
+  - `app/page.tsx` is the root page.
+  - `app/blog/_components/Post.tsx` is not routable, and is a safe place for UI utilities
 - Both layout and page components are **React Server Components** by default
 - **Route components** expose an API endpoint.
-    - The following async function names are supported: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
-    - Fun fact: If `OPTIONS` is not defined, Next.js will automatically implement it, since it's important for pre-flight.
+  - The following async function names are supported: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
+  - Fun fact: If `OPTIONS` is not defined, Next.js will automatically implement it, since it's important for pre-flight.
 - **Routing-aware components** are a smart import that selects the right component based on URL. Think URL-driven instead of state-driven.
-    - **Parallel routes** (`@folder`) are for when you need non-blocking loading/error states for UI **slots**, so sidebar.tsx doesn't block main-content.tsx. Very niche optimization.
-    - **Intercepted routes** (`(.)folder`) are for when you want different UI (modal vs full page) based on how you got there, while keeping URLs shareable and SEO-friendly. 
-    - Twitter/X does this: Click tweet from feed -> modal (intercepted route). Share x.com/123 -> full page.
+  - **Parallel routes** (`@folder`) are for when you need non-blocking loading/error states for UI **slots**, so sidebar.tsx doesn't block main-content.tsx. Very niche optimization.
+  - **Intercepted routes** (`(.)folder`) are for when you want different UI (modal vs full page) based on how you got there, while keeping URLs shareable and SEO-friendly.
+  - Twitter/X does this: Click tweet from feed -> modal (intercepted route). Share x.com/123 -> full page.
 - `components` and `lib`/`util` directories have no special effect.
 
 ## Server and Client Components
 
 Next.js uses the following render hierarchy:
+
 1. layout.js
 2. template.js, error.js, loading.js, not-found.js
 3. page.js or nested layout.js
 
 - **Static Rendering** (or **prerendering**) occurs during build time or revalidation. Contest is already available client-side, so makes navigation feel instant.
-    - The **Link component** (`<Link>`) allows client-side transitions, but prefetching when hovered or entering the viewport
-    - Good resource for animated loading bar: https://github.com/vercel/react-transition-progress
+  - The **Link component** (`<Link>`) allows client-side transitions, but prefetching when hovered or entering the viewport
+  - Good resource for animated loading bar: https://github.com/vercel/react-transition-progress
 - **Dynamic Rendering** occurs at request time.
-    - Partial prefetching is possible with **streaming**. To use streaming, create `loading.tsx` or use a shared layout. This allows the server to send each part of a dynamic route as they're ready.
-    - `loading.tsx` automatically wraps `page.tsx` in a `<Suspense>` component
-    - Core Web Vitals go brrrrr!
+  - Partial prefetching is possible with **streaming**. To use streaming, create `loading.tsx` or use a shared layout. This allows the server to send each part of a dynamic route as they're ready.
+  - `loading.tsx` automatically wraps `page.tsx` in a `<Suspense>` component
+  - Core Web Vitals go brrrrr!
 - `next dev` displays if a route is static or dynamic
 - `generateStaticParams` is the new `getStaticProps`
 - Next.js uses React's APIs to orchestrate rendering:
 - **Client Components** run in the browser, and handle interactivity. Use these when you need `onClick`, `useEffect`, or the `window` object.
-    - Simply add the `"use client"` directive to the top of a file to declare a boundary
-    - All its imports and child components are considered part of the client bundle. That is, you don't need to add the directive to every child component
-    - Fun fact: the React `use` hook also turns a server compoennt into a client component
+  - Simply add the `"use client"` directive to the top of a file to declare a boundary
+  - All its imports and child components are considered part of the client bundle. That is, you don't need to add the directive to every child component
+  - Fun fact: the React `use` hook also turns a server compoennt into a client component
 - **Server Components** render on the server, and **never ship to the browser**. Useful for making API calls with API keys, and reducing the browser bundle
-    - Server renders a **RSC payload**, a compact binary representation of the component tree, with **placeholders** for client components and any **props passed** to client components.
-    - If env variables are not prefixed with `NEXT_PUBLIC_`, they are replaced with an empty string.
-    - To prevent accidental usage, use `import 'server-only'`. The corresponding `client-only` npm package can be used too. Fun fact: the contents of these packages from npm are not used by Next.js.
-    - React context is NOT supported in server components
+  - Server renders a **RSC payload**, a compact binary representation of the component tree, with **placeholders** for client components and any **props passed** to client components.
+  - If env variables are not prefixed with `NEXT_PUBLIC_`, they are replaced with an empty string.
+  - To prevent accidental usage, use `import 'server-only'`. The corresponding `client-only` npm package can be used too. Fun fact: the contents of these packages from npm are not used by Next.js.
+  - React context is NOT supported in server components
 - Next.js uses React's APIs to orchestrate rendering
 
 On page load:
+
 1. Server compiles server components into an RSC payload binary
 2. Client uses HTML for the first paint
 3. Client uses RSC payload to know what the UI should look like
@@ -63,10 +65,29 @@ On page load:
 On navigation, navigation can be fully satisfied from the client cache.
 
 A lot of this shit when usign npm packages:
+
 ```
 'use client'
- 
+
 import { Carousel } from 'cool-carousel'
- 
+
 export default Carousel
+```
+
+- **Partial Prerendering (PPR)** allows you to optimize the **parts of the page that don't change** as **pre-rendered shells**. You can make a page as static or dynamic as it needs to be.
+- **Cache components** flips the script. As of Next 16 and React 19.2, when enabled, Next.js treats everything as dynamic by default. No implicit caching. And you need to manually mark data and components as cacheable with `use cache` or React's `cache()`. Enable with `cacheComponents: true` in `next.config.ts`.
+  - This is the stable form of `unstable_cache` that took an async function, array, and object as arguments (wtf?).
+- Fully dynamic pages can still steam and send early asset hints (eg. `<link>`) about what it'll need.
+- Cache Components enforces that **dynamic code must be wrapped in a `<Suspense>` boundary**
+- Fun fact: Wrapping a component in `<Suspense>` doesn't make it dynamic - calling an API does. Suspense just acts as a boundary that enables streaming. This allows Next.js to stream its contents to the user as soon as it's ready, without blocking the rest of the app.
+
+## Biome
+
+- ESLint and Prettier finally have some real competition.
+
+```
+# Add `.vscode/extensions.json` and `.vscode/settings.json`
+
+pnpm add -D -E @biomejs/biome
+pnpx @biomejs/biome init
 ```
