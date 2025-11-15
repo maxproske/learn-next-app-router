@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Expected to be used with the `use cache` directive to create Cache Components.
   cacheComponents: true,
+  output: 'standalone',
 }
 
 export default nextConfig

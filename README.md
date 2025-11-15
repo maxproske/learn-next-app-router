@@ -165,3 +165,27 @@ pnpm install -D babel-plugin-react-compiler
 ## Wtfs to look into later
 
 - https://nextjs.org/docs/app/getting-started/fetching-data#preloading-data
+
+## Fly.io
+
+- Autoscales-to-zero with per-second billing. Aprox 5 mins idle for apps, and 1 hour idle for dev DBs (non-configurable). Off = no CPU/RAM billing, only pay for storage
+  - Every few minutes, Fly Proxy runs a **downscaler**.
+  - **Stopped**: usually a couple seconds+
+  - **Suspend**: usually a few hundred ms. Takes a snapshot of CPU/RAM. Suspend only works if the machine has <= 2GB RAM. Not guarenteed to persist (deploying a new version, maintenance)
+- Fly tends to be 3–5x DO’s total cost for the same workload if run all month ($10–15/mo, vs ~$6 on DO for 1 vCPU/1 GB RAM)
+
+```sh
+# init
+fly launch
+cat .env | fly secrets import
+
+# regenerate dockerfile
+
+# update
+fly deploy
+
+# scale up/down
+fly scale count 2
+fly scale count 4 --region ewr
+fly scale count 1
+```
