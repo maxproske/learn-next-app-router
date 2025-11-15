@@ -108,6 +108,23 @@ async function getProducts() {
 }
 ```
 
+- Always put a `'use client'` in `layout.tsx`
+- In the future, the `'use cache: private'` directive can be used for caching per-user data. It will work just like `'use cache'` but allows you to use runtime APIs like `cookies()`/`headers()` for auth for fewer duplicate expensive queries per user.
+
+```tsx
+export async function getRecommendations() {
+  "use cache: private";
+  cacheLife("hours");
+
+  const { sessionId } = (await cookies()).get("session")?.value;
+  const { userId } = await getUser({ sessionId });
+
+  cacheTag(`user-${userId}-recommendations`);
+
+  return await getRecommendationsByUserId({ userId });
+}
+```
+
 ## Biome
 
 - ESLint and Prettier finally have some real competition.
