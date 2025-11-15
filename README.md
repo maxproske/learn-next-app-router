@@ -84,10 +84,17 @@ export default Carousel
 ## Biome
 
 - ESLint and Prettier finally have some real competition.
+- Prettier funded their own competition, since they are nearly feature complete. A USD$20,000 bounty was put up by Prettier to create a Rust-based formatter that passed 95% of Prettier's unit tests for JavaScript, essentially a faster, drop-in equivalent. ($10,000 contributed by Vercel) Biome already existed, but as a Rust fork of Rome it pursued Prettier-compatibility, hit the target (97%, 25x faster than Prettier, 15x faster than ESLint), and ended up winning.
+- I love that JS/TS tooling is getting rewritten in Rust
 
-```
+```sh
 # Add `.vscode/extensions.json` and `.vscode/settings.json`
 
 pnpm add -D -E @biomejs/biome
 pnpx @biomejs/biome init
+pnpm lint
+pnpm format
+
+# Sub-2ms!!
+# Formatted 12 files in 1993µs
 ```
