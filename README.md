@@ -4,6 +4,7 @@
 
 - Next 16+ uses Turbopack by default. To opt-out, use the `--webpack` option on `dev` and `build` commands.
 - Much **boundaries**, streaming, and serverless. 2 opposing modes: parts of a route can be in a functioning and non-functioning state. And in a loading or resolved state. And in a static or dynamic state. All without blocking the rest of the page. Imo there are more important things than caching.
+- Next 16 finally fixes the "magic"/confusing fetch-based caching from the "classic" App Router and makes caching explicit and optional.
 
 ## Inside the `app` directory
 
@@ -78,11 +79,16 @@ export default Carousel
 - **Cache components** flips the script. As of Next 16 and React 19.2, when enabled, Next.js treats everything as dynamic by default. No implicit caching. And you need to manually mark data and components as cacheable with `use cache` or React's `cache()`. Enable with `cacheComponents: true` in `next.config.ts`.
   - This is the stable form of `unstable_cache` that took an async function, array, and object as arguments (wtf?).
   - Equivalent to `export const dynamic = 'force-dynamic'` on page components.
-  - The `use cache` directive caching can be applied to all IO (eg. database calls, API calls), not just components and routes!
+  - And `'use cache'` is the new `export const dynamic = 'force-static'`
+  - The `use cache` directive caching can be applied to all IO if the data changes infrequently (eg. database calls, API calls), not just components and routes!
 - Fully dynamic pages can still steam and send early asset hints (eg. `<link>`) about what it'll need.
-- Cache Components enforces that **dynamic code must be wrapped in a parent `<Suspense>` boundary**, because Next refuses to let uncached async work block the whole route.
+- With Cache Components enabled, Next.js enforces that **dynamic code must be wrapped in a parent `<Suspense>` boundary or moved into a Cache Component (`'use cache'`)**, because Next refuses to let uncached async work block the whole route.
+  - Otherwise, you get a "Uncached data was accessed outside of <Suspense>" error
 - Fun fact: Wrapping a component in `<Suspense>` doesn't make it dynamic - calling an API does. Suspense just acts as a boundary that enables streaming. This allows Next.js to stream its contents to the user as soon as it's ready, without blocking the rest of the app.
-- CMS can use `cacheTag` to tag your cached data, then trigger `updateTag` or `revalidateTag` to mark the UI as ready for revalidation.
+- For expensive-but-slowly-changing queries (eg. CMS), use `cacheTag` to tag your cached data, then trigger `updateTag` or `revalidateTag` to mark the UI as ready for revalidation.
+- Behind the scenes, `loading.tsx` will be nested inside `layout.tsx`, and automatically wrap `page.tsx` in a `<Suspense>` boundary. This is good if you don't want cumulative shift and want to show a full screen loading state immediately. For more granular streaming, you can use `<Suspense>` inside `page.tsx`
+- That's very close to our getServerSideProps mental model, but with streaming + nested layouts. A little more digestable than the "classic" App router with `cacheComponents: false`. If you later decide "this part is okay to cache", you just opt it in. Cool!
+- If you prop drill `{children}`, child components remain dynamic!
 
 ```tsx
 // Query the database at most once per hour
@@ -120,3 +126,20 @@ pnpm format
 # Sub-2ms!!
 # Formatted 12 files in 1993µs
 ```
+
+- If one request fails when using `Promise.all`, the **entire operation will fail**. To handle this, you can use `Promise.allSettled`.
+
+## React Compiler
+
+- The React Compiler enables an extra optimization layer that automatically memoizes React components via a Babel plugin orchestrated by the Rust-based SWC compiler. No `useMemo`, or `useCallback` needed!
+- Next still uses SWC as the main compiler, but invoke that Babel plugin so you may notice slightly longer build times. You only opt-out of SWC altogether when a `.babelrc` or `babel.config.js` is present.
+- The `'use memo'` directive can be enabled by adding `reactCompiler: { compilationMode: 'annotation' }` to your `next.config.ts`
+- I'm not sure why you'd want to do this, but the `'use no memo'` directive can be used to opt-out of React Compiler transforms.
+
+```
+pnpm install -D babel-plugin-react-compiler
+```
+
+## Wtfs to look into later
+
+- https://nextjs.org/docs/app/getting-started/fetching-data#preloading-data

@@ -10,13 +10,17 @@ async function getTitleFromDatabase() {
   return 'Hello world!'
 }
 
-export default async function Page() {
-  const title = getTitleFromDatabase()
+async function Title() {
+  const title = await getTitleFromDatabase()
 
+  return <h1>{title}</h1>
+}
+
+export default async function Page() {
   return (
     <div>
       <Suspense fallback={<h1>Loading...</h1>}>
-        <h1>{title}</h1>
+        <Title />
       </Suspense>
 
       <Suspense fallback={<div className="p-4">Loading...</div>}>
