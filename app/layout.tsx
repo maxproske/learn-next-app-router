@@ -1,4 +1,6 @@
-export default function RootLayout({
+'use cache'
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode

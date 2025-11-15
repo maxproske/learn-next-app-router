@@ -77,15 +77,37 @@ export default Carousel
 - **Partial Prerendering (PPR)** allows you to optimize the **parts of the page that don't change** as **pre-rendered shells**. You can make a page as static or dynamic as it needs to be.
 - **Cache components** flips the script. As of Next 16 and React 19.2, when enabled, Next.js treats everything as dynamic by default. No implicit caching. And you need to manually mark data and components as cacheable with `use cache` or React's `cache()`. Enable with `cacheComponents: true` in `next.config.ts`.
   - This is the stable form of `unstable_cache` that took an async function, array, and object as arguments (wtf?).
+  - Equivalent to `export const dynamic = 'force-dynamic'` on page components.
+  - The `use cache` directive caching can be applied to all IO (eg. database calls, API calls), not just components and routes!
 - Fully dynamic pages can still steam and send early asset hints (eg. `<link>`) about what it'll need.
-- Cache Components enforces that **dynamic code must be wrapped in a `<Suspense>` boundary**
+- Cache Components enforces that **dynamic code must be wrapped in a parent `<Suspense>` boundary**, because Next refuses to let uncached async work block the whole route.
 - Fun fact: Wrapping a component in `<Suspense>` doesn't make it dynamic - calling an API does. Suspense just acts as a boundary that enables streaming. This allows Next.js to stream its contents to the user as soon as it's ready, without blocking the rest of the app.
+- CMS can use `cacheTag` to tag your cached data, then trigger `updateTag` or `revalidateTag` to mark the UI as ready for revalidation.
+
+```tsx
+// Query the database at most once per hour
+import { cacheLife } from "next/cache";
+
+export async function GET() {
+  const products = await getProducts();
+
+  return Response.json(products);
+}
+
+async function getProducts() {
+  "use cache";
+  cacheLife("hours");
+
+  return await db.query("SELECT * FROM products");
+}
+```
 
 ## Biome
 
 - ESLint and Prettier finally have some real competition.
-- Prettier funded their own competition, since they are nearly feature complete. A USD$20,000 bounty was put up by Prettier to create a Rust-based formatter that passed 95% of Prettier's unit tests for JavaScript, essentially a faster, drop-in equivalent. ($10,000 contributed by Vercel) Biome already existed, but as a Rust fork of Rome it pursued Prettier-compatibility, hit the target (97%, 25x faster than Prettier, 15x faster than ESLint), and ended up winning.
+- Prettier funded their own competition, since they are nearly **feature complete**. A USD$20,000 bounty was put up by Prettier to create a Rust-based formatter that passed 95% of Prettier's unit tests for JavaScript, essentially a faster, drop-in equivalent. ($10,000 contributed by Vercel) Biome already existed, but as a Rust fork of Rome it pursued Prettier-compatibility, hit the target (97%, 25x faster than Prettier, 15x faster than ESLint), and ended up winning.
 - I love that JS/TS tooling is getting rewritten in Rust
+- Rust can't spinup `tsc` so it's an uphill battle. No ESLint spam in your `package.json`. But it's missing the ESLint plugin system is a bit of a hit, especially Tailwind shorthand and utils ordering support.
 
 ```sh
 # Add `.vscode/extensions.json` and `.vscode/settings.json`
