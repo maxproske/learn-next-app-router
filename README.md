@@ -140,6 +140,11 @@ pnpm format
 pnpm install -D babel-plugin-react-compiler
 ```
 
+## Build Adapters
+
+- **Build Adapters** is an experimental feature in Next.js 16 that allows you to rearrange the content of dist for specific hosting platforms, where you don't have access to the runtime. For example, AWS Lambda or Cloudflare Workers needs API endpoints sliced into edge workers with a particular bundle layout.
+- Not something we need to touch with Docker, since you own the runtime.
+
 ## Wtfs to look into later
 
 - https://nextjs.org/docs/app/getting-started/fetching-data#preloading-data
